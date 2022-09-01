@@ -6,7 +6,7 @@
 //
 
 import UIKit
-import RealmSwift
+import OrderedCollections
 
 class ViewController: UIViewController {
     
@@ -14,9 +14,7 @@ class ViewController: UIViewController {
     @IBOutlet weak var yearTextField: UITextField!
     @IBOutlet weak var tableView: UITableView!
     
-    let realm = try! Realm()
-    
-    var movieArray: Results<MovieData>?
+    var movieArray = OrderedSet<MovieData>()
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -35,14 +33,16 @@ class ViewController: UIViewController {
         let newMovie = MovieData()
         newMovie.movieTitle = titleTextField.text ?? ""
         newMovie.movieDate = Int(yearTextField.text ?? "") ?? 0
-     
+        
         DataManager.shared.saveMovie(movie: newMovie)
+        movieArray.append(newMovie)
         tableView.reloadData()
         
         titleTextField.endEditing(true)
         yearTextField.endEditing(true)
         titleTextField.text = ""
         yearTextField.text = ""
+        
     }
   
 }
@@ -52,14 +52,16 @@ class ViewController: UIViewController {
 extension ViewController: UITableViewDataSource {
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return movieArray?.count ?? 1
+        return movieArray.count
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        
         let cell = tableView.dequeueReusableCell(withIdentifier: "Cell", for: indexPath)
-        let title = movieArray?[indexPath.row].movieTitle ?? "No movies added"
-        let date = movieArray?[indexPath.row].movieDate ?? 0
+        let title = movieArray[indexPath.row].movieTitle
+        let date = movieArray[indexPath.row].movieDate
         cell.textLabel?.text = title + " " + String(date)
+        
         return cell
     }
 }
@@ -76,10 +78,11 @@ extension ViewController: UITableViewDelegate {
         
         if editingStyle == .delete {
             
-            guard let movieToDelete = movieArray?[indexPath.row] else { return }
+            let movieToDelete = movieArray[indexPath.row]
             DataManager.shared.deleteMovie(movie: movieToDelete)
 
             tableView.beginUpdates()
+            movieArray.remove(at: indexPath.row)
             tableView.deleteRows(at: [indexPath], with: .fade)
             tableView.endUpdates()
         }

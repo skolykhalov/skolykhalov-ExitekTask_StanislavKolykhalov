@@ -7,6 +7,7 @@
 
 import Foundation
 import RealmSwift
+import OrderedCollections
 
 struct DataManager {
     
@@ -29,12 +30,17 @@ struct DataManager {
     
     //MARK: - Loading from Realm
     
-    func loadMovie() -> Results<MovieData> {
+    func loadMovie() -> OrderedSet<MovieData> {
         
+        var movieResult = OrderedSet<MovieData>()
         var movieRealm: Results<MovieData>
         movieRealm = realm.objects(MovieData.self)
         
-        return movieRealm
+        for movie in movieRealm {
+            movieResult.append(movie)
+        }
+        
+        return movieResult
     }
     
     //MARK: - Deleting from Realm
