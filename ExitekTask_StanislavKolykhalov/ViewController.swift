@@ -21,9 +21,17 @@ class ViewController: UIViewController {
         
         titleTextField.delegate = self
         yearTextField.delegate = self
+    }
+    
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        
+        loadMovies()
+    }
+    
+    private func loadMovies() {
         
         movieArray = DataManager.shared.loadMovie()
-
     }
     
     //MARK: - AddButton Functions
@@ -35,8 +43,14 @@ class ViewController: UIViewController {
         newMovie.movieDate = Int(yearTextField.text ?? "") ?? 0
         
         DataManager.shared.saveMovie(movie: newMovie)
-        movieArray.append(newMovie)
-        tableView.reloadData()
+        
+        if !movieArray.contains(newMovie) {
+            movieArray.append(newMovie)
+            tableView.insertRows(at: [IndexPath(row: movieArray.count-1, section: 0)], with: .automatic)
+            
+        } else if let index = movieArray.firstIndex(of: newMovie) {
+            tableView.reloadRows(at: [IndexPath(row: index, section: 0)], with: .automatic)
+        }
         
         titleTextField.endEditing(true)
         yearTextField.endEditing(true)
@@ -61,7 +75,6 @@ extension ViewController: UITableViewDataSource {
         let title = movieArray[indexPath.row].movieTitle
         let date = movieArray[indexPath.row].movieDate
         cell.textLabel?.text = title + " " + String(date)
-        
         return cell
     }
 }
@@ -80,11 +93,8 @@ extension ViewController: UITableViewDelegate {
             
             let movieToDelete = movieArray[indexPath.row]
             DataManager.shared.deleteMovie(movie: movieToDelete)
-
-            tableView.beginUpdates()
             movieArray.remove(at: indexPath.row)
             tableView.deleteRows(at: [indexPath], with: .fade)
-            tableView.endUpdates()
         }
     }
 }
